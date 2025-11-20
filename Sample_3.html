@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extreme Weather Visualization</title>
+    <style>
+        /* --- 1. overall style --- */
+        :root {
+            --primary-color: #00204e; /* U of T Blue */
+            --accent-color: #d63333;  /* Red Accent */
+            --text-color: #333;
+            --bg-color: #f9f9f9;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: block; 
+        }
+
+        /* --- 2. Header --- */
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 40px; 
+        }
+        header h1 { 
+            color: white; 
+            margin: 0 0 15px 0; 
+            font-size: 2rem; 
+            line-height: 1.3;
+        }
+        .authors { font-size: 1.1rem; opacity: 0.9; margin-bottom: 5px;}
+        .institution { font-size: 0.9rem; opacity: 0.8; }
+        .date { font-size: 0.85rem; opacity: 0.7; margin-top: 5px; }
+
+        /* --- 3 Container --- */
+        .container {
+            width: 90%;
+            max-width: 1000px; 
+            margin: 0 auto;    
+            padding-bottom: 50px;
+        }
+
+        /* --- (Abstract) --- */
+        .abstract-box {
+            background-color: #ffffff;
+            border-left: 6px solid var(--accent-color); 
+            padding: 20px 30px;
+            margin-bottom: 30px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
+        .abstract-box p { margin-bottom: 15px; }
+        .abstract-box p:last-child { margin-bottom: 0; }
+        .abstract-box strong { font-weight: 700; color: #222; }
+
+        /* --- Case Study  --- */
+        .case-study-box {
+            background-color: #ffffff;
+            padding: 25px 30px;
+            margin-bottom: 30px; /* 与下方滑块保持距离 */
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .case-study-box h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        .case-study-box hr {
+            border: 0;
+            border-top: 1px solid #e0e0e0; 
+            margin: 15px 0 20px 0;
+        }
+        .case-study-box p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+        .case-study-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* --- 4. 滑块核心样式 --- */
+        .comparison-slider {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            line-height: 0; 
+        }
+
+        .comparison-slider img {
+            display: block;
+            user-select: none;
+        }
+
+        .img-background {
+            position: relative; 
+            width: 100%;
+            height: auto;       
+            top: 0; left: 0;
+        }
+
+        .img-foreground-wrapper {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            border-right: 3px solid #fff;
+        }
+
+        .img-foreground {
+            height: 100%;
+            width: auto; 
+            max-width: none; 
+            object-fit: cover;
+        }
+
+        /* --- 5. 交互组件样式 --- */
+        .slider-input {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            outline: none; margin: 0;
+            opacity: 0; cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .slider-handle {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 2;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .slider-handle::after {
+            content: '↔';
+            color: #333; font-weight: bold; font-size: 20px;
+            line-height: normal;
+        }
+        
+        .label {
+            position: absolute; top: 10px;
+            padding: 6px 12px;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 3;
+            pointer-events: none;
+            line-height: normal;
+        }
+        .label-before { left: 10px; background: rgba(208, 28, 28, 0.7);}
+        .label-after { right: 10px; background: rgba(38, 206, 144, 0.7);}
+
+      
+        footer {
+            background: #001633; 
+            color: #f5f5f5;
+            padding: 15px 20px;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 30px;
+        }
+        footer .footer-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        footer a {
+            color: #aad4ff;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    
+    <header>
+        <h1>EXTREME WEATHER VISUALIZATION FOR CHANGE:<br>ACTION OR INACTION</h1>
+        <div class="authors">Profs. Ronald Baecker and John Danahy</div>
+        <div class="institution">Dynamic Graphics Project, University of Toronto</div>
+        <div class="date">13 November 2025</div>
+    </header>
+
+    <div class="container">
+        
+        <div class="abstract-box">
+            <p>The world is confronted with possibly catastrophic harm from greenhouse gas emissions. Global surface temperatures continue their unprecedented rise. There are more frequent and severe extreme weather events such as floods and fires.</p>
+            <p><strong>Yet society has not acted sufficiently.</strong> We aim to visualize real extreme weather events to show how there could be more destruction, and how actions could reduce the damage.</p>
+        </div>
+
+        <div class="case-study-box">
+            <h2>Case Study: Mississauga's Little Etobicoke Creek</h2>
+            <hr>
+            <p>
+                We have simulated and visualized a 100-year flood scenario for Little Etobicoke Creek (Mississauga) under different mitigation scenarios.
+                The figure below illustrates how flood damage impacts could be reduced through the mitigation measures tested in this study, including channel deepening and widening, as well as enhanced upstream infiltration.
+            </p>
+            <p>Comparing the <strong>ACTION/INACTION</strong> flooding with future possibilities.</p>
+        </div>
+
+        <div class="comparison-slider" id="comparisonSlider">
+            <span class="label label-before">INACTION （Status Quo）</span>
+            <span class="label label-after">ACTION （Mitigation）</span>
+
+            <img src="images/100yr_Combo.jpg" alt="After" class="img-background">
+
+            <div class="img-foreground-wrapper" id="foregroundWrapper">
+                <img src="images/100yr_Control.jpg" alt="Before" class="img-foreground" id="foregroundImg">
+            </div>
+
+            <div class="slider-handle" id="sliderHandle"></div>
+            <input type="range" min="0" max="100" value="50" class="slider-input" id="sliderInput" oninput="updateSlider(this.value)">
+        </div>
+
+        <p style="margin-top: 20px; line-height: 1.6;">
+            The image above illustrates the potential impact of flood mitigation strategies. 
+            <br>
+            Slide right to see the effects of engineering interventions compared to the current risk scenario.
+        </p>
+
+    </div>
+
+   
+    <footer>
+        <div class="footer-inner">
+            <p>© 2025 Dynamic Graphics Project, University of Toronto. All rights reserved.</p>
+            <p>Extreme Weather Visualization for Change: Action or Inaction?</p>
+        </div>
+    </footer>
+
+    <script>
+        const sliderInput = document.getElementById('sliderInput');
+        const foregroundWrapper = document.getElementById('foregroundWrapper');
+        const sliderHandle = document.getElementById('sliderHandle');
+        const container = document.getElementById('comparisonSlider');
+        const foregroundImg = document.getElementById('foregroundImg');
+
+        function updateSlider(val) {
+            foregroundWrapper.style.width = val + "%";
+            sliderHandle.style.left = val + "%";
+        }
+
+        function resizeImage() {
+            const width = container.offsetWidth;
+            foregroundImg.style.width = width + 'px';
+        }
+
+        window.addEventListener('resize', resizeImage);
+        window.onload = resizeImage; 
+        resizeImage();
+    </script>
+
+</body>
+</html>
